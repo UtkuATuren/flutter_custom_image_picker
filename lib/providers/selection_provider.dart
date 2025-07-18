@@ -1,6 +1,7 @@
 // selection_provider.dart
 // Manages the synchronous state of selected assets.
 
+import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/selected_asset.dart';
@@ -38,6 +39,14 @@ class Selection extends _$Selection {
     state = [
       for (final selectedAsset in state)
         if (selectedAsset.asset.id == asset.id) selectedAsset.copyWith(aspectRatio: ratio) else selectedAsset
+    ];
+  }
+
+  // Updates the transform (scale and translation) for a specific asset.
+  void updateTransform(AssetEntity asset, double scale, Offset translation) {
+    state = [
+      for (final selectedAsset in state)
+        if (selectedAsset.asset.id == asset.id) selectedAsset.copyWith(scale: scale, translation: translation) else selectedAsset
     ];
   }
 
