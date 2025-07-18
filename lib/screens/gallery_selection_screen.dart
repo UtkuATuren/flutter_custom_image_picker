@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'gallery_editor_screen.dart';
 import '../widgets/gallery_grid_item.dart';
+import '../widgets/foldable_preview_widget.dart';
 import '../providers/gallery_provider.dart';
 import '../providers/permissions_provider.dart';
 import '../providers/selection_provider.dart';
@@ -54,55 +55,65 @@ class GallerySelectionScreen extends HookConsumerWidget {
           ),
         ],
       ),
-      body: permissions.when(
-        data: (state) {
-          if (state.isAuth) {
-            return gallery.when(
-              data: (galleryState) {
-                if (galleryState.assets.isEmpty) {
-                  return const Center(child: Text('No photos found.'));
-                }
-                return NotificationListener<ScrollNotification>(
-                  onNotification: (notification) {
-                    if (notification.metrics.pixels >= notification.metrics.maxScrollExtent - 200) {
-                      ref.read(galleryProvider.notifier).loadMoreAssets();
-                    }
-                    return false;
-                  },
-                  child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      crossAxisSpacing: 2,
-                      mainAxisSpacing: 2,
-                    ),
-                    itemCount: galleryState.assets.length,
-                    itemBuilder: (context, index) {
-                      final asset = galleryState.assets[index];
-                      return GalleryGridItem(asset: asset);
+      body: Column(
+        children: [
+          // Foldable preview widget for selected items
+          const FoldablePreviewWidget(),
+
+          // Main gallery content
+          Expanded(
+            child: permissions.when(
+              data: (state) {
+                if (state.isAuth) {
+                  return gallery.when(
+                    data: (galleryState) {
+                      if (galleryState.assets.isEmpty) {
+                        return const Center(child: Text('No photos found.'));
+                      }
+                      return NotificationListener<ScrollNotification>(
+                        onNotification: (notification) {
+                          if (notification.metrics.pixels >= notification.metrics.maxScrollExtent - 200) {
+                            ref.read(galleryProvider.notifier).loadMoreAssets();
+                          }
+                          return false;
+                        },
+                        child: GridView.builder(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4,
+                            crossAxisSpacing: 2,
+                            mainAxisSpacing: 2,
+                          ),
+                          itemCount: galleryState.assets.length,
+                          itemBuilder: (context, index) {
+                            final asset = galleryState.assets[index];
+                            return GalleryGridItem(asset: asset);
+                          },
+                        ),
+                      );
                     },
-                  ),
-                );
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (e, s) => const Center(child: Text('Failed to load assets.')),
+                  );
+                } else {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Permission denied.'),
+                        ElevatedButton(
+                          onPressed: () => ref.read(permissionsProvider.notifier).openSettings(),
+                          child: const Text('Open Settings'),
+                        )
+                      ],
+                    ),
+                  );
+                }
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, s) => const Center(child: Text('Failed to load assets.')),
-            );
-          } else {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Permission denied.'),
-                  ElevatedButton(
-                    onPressed: () => ref.read(permissionsProvider.notifier).openSettings(),
-                    child: const Text('Open Settings'),
-                  )
-                ],
-              ),
-            );
-          }
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, s) => const Center(child: Text('Permission request failed.')),
+              error: (e, s) => const Center(child: Text('Permission request failed.')),
+            ),
+          ),
+        ],
       ),
     );
   }

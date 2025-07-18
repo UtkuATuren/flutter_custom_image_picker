@@ -50,6 +50,14 @@ class Selection extends _$Selection {
     ];
   }
 
+  // Updates the video trimming times for a specific asset.
+  void updateVideoTrim(AssetEntity asset, Duration startTime, Duration endTime) {
+    state = [
+      for (final selectedAsset in state)
+        if (selectedAsset.asset.id == asset.id) selectedAsset.copyWith(startTime: startTime, endTime: endTime) else selectedAsset
+    ];
+  }
+
   // Checks if an asset is currently selected.
   bool isSelected(AssetEntity asset) {
     return state.any((selected) => selected.asset.id == asset.id);

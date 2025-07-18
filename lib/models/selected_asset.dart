@@ -12,11 +12,17 @@ class SelectedAsset {
   final double scale;
   final Offset translation;
 
+  // Video trimming properties
+  final Duration? startTime;
+  final Duration? endTime;
+
   SelectedAsset({
     required this.asset,
     this.aspectRatio,
     this.scale = 1.0,
     this.translation = Offset.zero,
+    this.startTime,
+    this.endTime,
   });
 
   SelectedAsset copyWith({
@@ -24,12 +30,16 @@ class SelectedAsset {
     double? aspectRatio,
     double? scale,
     Offset? translation,
+    Duration? startTime,
+    Duration? endTime,
   }) {
     return SelectedAsset(
       asset: asset ?? this.asset,
       aspectRatio: aspectRatio ?? this.aspectRatio,
       scale: scale ?? this.scale,
       translation: translation ?? this.translation,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
     );
   }
 }

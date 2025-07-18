@@ -4,11 +4,14 @@
 import 'package:custom_image_picker_test/providers/selection_provider.dart';
 import 'package:custom_image_picker_test/widgets/aspect_ratio_widget.dart';
 import 'package:custom_image_picker_test/widgets/asset_entity_image.dart';
+import 'package:custom_image_picker_test/widgets/video_player_widget.dart';
+import 'package:custom_image_picker_test/utils/file_converters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:photo_manager/photo_manager.dart';
+import 'package:video_trimmer/video_trimmer.dart';
 
 class GalleryEditorScreen extends HookConsumerWidget {
   const GalleryEditorScreen({super.key});
@@ -61,34 +64,56 @@ class GalleryEditorScreen extends HookConsumerWidget {
 
           String filePath = file.path;
 
-          // If an aspect ratio is set, perform the crop.
-          if (selectedAsset.aspectRatio != null) {
-            // Note: image_cropper uses ratioX/ratioY. We need to convert our single double value.
-            // A simple way is to use the value for X and 1 for Y, but for vertical ratios
-            // it's better to calculate them properly.
-            double ratioX = selectedAsset.aspectRatio!;
-            double ratioY = 1;
-
-            // Handle vertical aspect ratios for the cropper
-            if (ratioX < 1) {
-              ratioY = 1 / ratioX;
-              ratioX = 1;
+          // Handle video trimming
+          if (selectedAsset.asset.type == AssetType.video && (selectedAsset.startTime != null && selectedAsset.endTime != null)) {
+            final trimmer = Trimmer();
+            try {
+              await trimmer.loadVideo(videoFile: file);
+              String? trimmedPath;
+              await trimmer.saveTrimmedVideo(
+                startValue: selectedAsset.startTime!.inMilliseconds.toDouble(),
+                endValue: selectedAsset.endTime!.inMilliseconds.toDouble(),
+                onSave: (outputPath) {
+                  trimmedPath = outputPath;
+                },
+              );
+              if (trimmedPath != null) {
+                filePath = trimmedPath!;
+              }
+            } catch (e) {
+              print('Error trimming video: $e');
+            } finally {
+              trimmer.dispose();
             }
+          }
+          // Handle image cropping
+          else if (selectedAsset.asset.type == AssetType.image && selectedAsset.aspectRatio != null) {
+            try {
+              // Get image dimensions from the asset
+              final imageSize = Size(
+                selectedAsset.asset.width.toDouble(),
+                selectedAsset.asset.height.toDouble(),
+              );
 
-            final croppedFile = await ImageCropper().cropImage(
-              sourcePath: file.path,
-              aspectRatio: CropAspectRatio(ratioX: ratioX, ratioY: ratioY),
-              uiSettings: [
-                AndroidUiSettings(
-                    toolbarTitle: 'Crop Image', toolbarColor: Theme.of(context).primaryColor, toolbarWidgetColor: Colors.white, initAspectRatio: CropAspectRatioPreset.original, lockAspectRatio: true),
-                IOSUiSettings(
-                  title: 'Crop Image',
-                  aspectRatioLockEnabled: true,
-                ),
-              ],
-            );
-            if (croppedFile != null) {
-              filePath = croppedFile.path;
+              // Use the container size from our editor (600 pixels height)
+              final containerSize = const Size(600, 600);
+              final displaySize = ImageCropHelper.getImageDisplaySize(containerSize, imageSize);
+
+              // Use our custom cropping instead of ImageCropper
+              final croppedFile = await ImageCropHelper.cropImage(
+                sourceFile: file,
+                aspectRatio: selectedAsset.aspectRatio,
+                scale: selectedAsset.scale,
+                translation: selectedAsset.translation,
+                imageDisplaySize: displaySize,
+              );
+
+              if (croppedFile != null) {
+                filePath = croppedFile.path;
+              }
+            } catch (e) {
+              print('Error cropping image: $e');
+              // If cropping fails, use original file
             }
           }
           finalFiles.add(XFile(filePath));
@@ -125,7 +150,7 @@ class GalleryEditorScreen extends HookConsumerWidget {
           children: [
             // Main reorderable image preview area.
             SizedBox(
-              height: 300, // Fixed height for images
+              height: 600, // Fixed height for images
               child: PageView.builder(
                 controller: pageController,
                 itemCount: selectedAssets.length,
@@ -136,22 +161,35 @@ class GalleryEditorScreen extends HookConsumerWidget {
                     margin: EdgeInsets.zero,
                     elevation: 0,
                     shape: const RoundedRectangleBorder(),
-                    child: AspectRatioPreviewWrapper(
-                      aspectRatio: selectedAsset.aspectRatio,
-                      onTransformChanged: (scale, translation) {
-                        // Update the transform for the current asset
-                        ref.read(selectionProvider.notifier).updateTransform(
+                    child: selectedAsset.asset.type == AssetType.video
+                        ? VideoPlayerWidget(
+                            asset: selectedAsset.asset,
+                            startTime: selectedAsset.startTime,
+                            endTime: selectedAsset.endTime,
+                            onTrimChanged: (startTime, endTime) {
+                              ref.read(selectionProvider.notifier).updateVideoTrim(
+                                    selectedAsset.asset,
+                                    startTime,
+                                    endTime,
+                                  );
+                            },
+                          )
+                        : AspectRatioPreviewWrapper(
+                            aspectRatio: selectedAsset.aspectRatio,
+                            onTransformChanged: (scale, translation) {
+                              // Update the transform for the current asset
+                              ref.read(selectionProvider.notifier).updateTransform(
+                                    selectedAsset.asset,
+                                    scale,
+                                    translation,
+                                  );
+                            },
+                            child: AssetEntityImage(
                               selectedAsset.asset,
-                              scale,
-                              translation,
-                            );
-                      },
-                      child: AssetEntityImage(
-                        selectedAsset.asset,
-                        isOriginal: true,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
+                              isOriginal: true,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
                   );
                 },
               ),
@@ -176,8 +214,8 @@ class GalleryEditorScreen extends HookConsumerWidget {
                 ),
               ),
 
-            // Aspect Ratio selection controls.
-            if (selectedAssets.isNotEmpty)
+            // Aspect Ratio selection controls (only for images).
+            if (selectedAssets.isNotEmpty && selectedAssets[currentPageIndex.value].asset.type == AssetType.image)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
                 child: SingleChildScrollView(
