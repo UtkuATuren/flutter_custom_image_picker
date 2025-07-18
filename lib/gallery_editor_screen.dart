@@ -1,6 +1,9 @@
 // gallery_editor_screen.dart
 // The second page for reordering and editing selected assets.
 
+// ignore_for_file: use_build_context_synchronously
+
+import 'package:custom_image_picker_test/providers/selection_provider.dart';
 import 'package:custom_image_picker_test/widgets/asset_entity_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -9,7 +12,6 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
-import '../providers/selection_provider.dart';
 
 class GalleryEditorScreen extends HookConsumerWidget {
   const GalleryEditorScreen({super.key});
@@ -58,7 +60,6 @@ class GalleryEditorScreen extends HookConsumerWidget {
           finalFiles.add(XFile(filePath));
         }
         // Pop twice to exit the picker flow completely
-        // ignore: use_build_context_synchronously
         Navigator.of(context)
           ..pop()
           ..pop(finalFiles);

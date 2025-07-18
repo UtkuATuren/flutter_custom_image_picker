@@ -1,11 +1,11 @@
 // gallery_grid_item.dart
 // A highly optimized widget for displaying a single asset in the grid.
 
+import 'package:custom_image_picker_test/providers/selection_provider.dart';
 import 'package:custom_image_picker_test/widgets/asset_entity_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:photo_manager/photo_manager.dart';
-import '../providers/selection_provider.dart';
 
 class GalleryGridItem extends HookConsumerWidget {
   final AssetEntity asset;
