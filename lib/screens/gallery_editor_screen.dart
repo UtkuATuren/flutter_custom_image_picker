@@ -9,7 +9,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
-import '../selection_provider.dart';
+import '../providers/selection_provider.dart';
 
 class GalleryEditorScreen extends HookConsumerWidget {
   const GalleryEditorScreen({super.key});

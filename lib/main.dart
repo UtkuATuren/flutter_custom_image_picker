@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'gallery_selection_screen.dart'; // Import the main picker screen
+import 'screens/gallery_selection_screen.dart'; // Import the main picker screen
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));

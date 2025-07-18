@@ -3,7 +3,7 @@
 
 import 'package:photo_manager/photo_manager.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'gallery_models.dart';
+import '../models/selected_asset.dart';
 
 part 'selection_provider.g.dart';
 

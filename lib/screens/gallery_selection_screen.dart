@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'gallery_editor_screen.dart';
-import 'gallery_grid_item.dart';
-import 'gallery_provider.dart';
-import 'permissions_provider.dart';
-import 'selection_provider.dart';
+import '../widgets/gallery_grid_item.dart';
+import '../providers/gallery_provider.dart';
+import '../providers/permissions_provider.dart';
+import '../providers/selection_provider.dart';
 
 class GallerySelectionScreen extends HookConsumerWidget {
   const GallerySelectionScreen({super.key});
