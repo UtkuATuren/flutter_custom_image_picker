@@ -1,0 +1,41 @@
+# pubspec.yaml
+# Defines the project's dependencies.
+
+name: custom_image_picker_test
+description: "A new Flutter project."
+publish_to: 'none' 
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Core packages for media access and state management
+  photo_manager: ^3.1.1 
+  hooks_riverpod: ^2.5.1
+  flutter_hooks: ^0.20.5
+  riverpod_annotation: ^2.3.5
+
+  # UI and utility packages
+  image_cropper: ^9.1.0
+  reorderable_grid_view: ^2.2.6
+  image_picker: ^1.1.1 # Primarily for the XFile type
+  
+  cupertino_icons: ^1.0.2
+  photo_manager_image_provider: ^2.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  # Code generation
+  build_runner: ^2.4.9
+  riverpod_generator: ^2.4.0
+
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
